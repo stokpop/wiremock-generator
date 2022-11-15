@@ -29,9 +29,9 @@ class FileStorage(val filesPath: Path = Path.of("/tmp")) {
         return workDir
     }
 
-    fun zip(workDir: Path): Path {
+    fun zip(workDir: Path, projectId: String): Path {
         val list = workDir.listDirectoryEntries()
-        val zipFile = workDir.resolve("jmeter-gen.zip").toFile()
+        val zipFile = workDir.resolve("$projectId.zip").toFile()
 
         zipFile.zipOutputStream().use {
             list.map { p -> p.toFile() }

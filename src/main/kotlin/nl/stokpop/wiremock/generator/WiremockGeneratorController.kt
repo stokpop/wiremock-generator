@@ -26,18 +26,24 @@ class JmeterGeneratorController(val storage: FileStorage) {
         val projectId = "wiremock-gen." + System.currentTimeMillis()
         val workDir = storage.createProject(file, projectId)
 
-        // now call generator
-        executeCommand(
-            workDir,
-            "java -jar /openapi-generator-cli.jar generate -i swagger.json -g wiremock"
-        )
-
-        // now zip
-        val zipFile = storage.zip(workDir)
-        zipFiles[projectId] = zipFile
+        // this should be done in a co routine
+        generateAndZipAsync(workDir, projectId)
 
         // now return zip download url
         return FileUploadResponse(projectId)
+    }
+
+    private fun generateAndZipAsync(workDir: Path, projectId: String) {
+        // now call generator
+        executeCommand(
+            workDir,
+            "java -jar /openapi-generator-cli.jar generate -i swagger.json -g wiremock -o mappings"
+        )
+
+        // now zip generated mappings
+        val zipFile = storage.zip(workDir.resolve("mappings"), projectId)
+        // keep in mapping for future download
+        zipFiles[projectId] = zipFile
     }
 
     private fun executeCommand(workDir: Path, command: String) {
@@ -72,7 +78,7 @@ class JmeterGeneratorController(val storage: FileStorage) {
     @GetMapping("/download/{projectId:.+}")
     fun download(@PathVariable projectId: String, request: HttpServletRequest): ResponseEntity<Resource> {
 
-        val zipFile = zipFiles[projectId] ?: throw RuntimeException("ProjectId unknown: $projectId")
+        val zipFile = zipFiles[projectId] ?: throw RuntimeException("Zip file for $projectId unknown or not ready.")
 
         val resource = storage.fileAsResource(zipFile)
 
