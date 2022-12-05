@@ -1,6 +1,8 @@
 # wiremock-generator
 Docker image to easily generate wiremock stubs
 
+Sponsored by Rabobank.
+
 # Run
 
     docker run --rm -d -p 4757:8080 --name wiremock-gen stokpop/wiremock-gen:0.0.1
